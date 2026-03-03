@@ -1,0 +1,9 @@
+{
+	"name": "adf-kbc",
+	"location": "westus2",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "6bd55eb6-debe-4d3b-aec0-3679d8649421",
+		"tenantId": "3b3ef7e8-248f-420f-8bd1-5d4056e2c2e1"
+	}
+}
