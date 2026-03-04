@@ -3,9 +3,16 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Web1",
+				"name": "Get Token",
 				"type": "WebActivity",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "GetClientSecretFromKV",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -20,15 +27,31 @@
 						"Content-type": "application/x-www-form-urlencoded"
 					},
 					"url": "https://accounts.accesscontrol.windows.net/29e9c2e0-675c-4c89-9649-de2df9e8b789/tokens/OAuth/2",
-					"body": "https://accounts.accesscontrol.windows.net/29e9c2e0-675c-4c89-9649-de2df9e8b789/tokens/OAuth/2"
+					"body": "grant_type=client_credentials&client_id=12ec4feb-986a-4a37-9f1d-872e4ce31565@29e9c2e0-675c-4c89-9649-de2df9e8b789&client_secret=activity('GetClientSecretFromKV').output.value/januxrxcom.sharepoint.com@29e9c2e0-675c-4c89-9649-de2df9e8b789"
+				}
+			},
+			{
+				"name": "GetClientSecretFromKV",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "GET",
+					"url": "https://kv-kbc.vault.azure.net/secrets/secret-client/ba7cba0ffbf44a08bc9aa9ce8b5d3c47?api-version=7.3",
+					"authentication": {
+						"type": "MSI",
+						"resource": "https://vault.azure.net"
+					}
 				}
 			}
 		],
-		"parameters": {
-			"p_k_vault": {
-				"type": "string"
-			}
-		},
 		"annotations": []
 	}
 }
