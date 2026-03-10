@@ -11,6 +11,14 @@
 			"type": "secureString",
 			"metadata": "Cadena protegida para \"accountKey\"de \"AzureDataLakeStorage1\""
 		},
+		"Snowflake1_password": {
+			"type": "secureString",
+			"metadata": "Cadena protegida para \"password\"de \"Snowflake1\""
+		},
+		"AzureBlobStorage1_sasUri": {
+			"type": "secureString",
+			"metadata": "Cadena protegida para \"sasUri\"de \"AzureBlobStorage1\""
+		},
 		"AzureDataLakeStorage1_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://storageaccountkbc.dfs.core.windows.net/"
@@ -18,6 +26,14 @@
 		"HttpServer1_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://raw.githubusercontent.com"
+		},
+		"Snowflake1_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "CLINICAL_PIPELINE_DB"
+		},
+		"Snowflake1_properties_typeProperties_host": {
+			"type": "string",
+			"defaultValue": "USSYPUC-JH96153.snowflakecomputing.com"
 		}
 	},
 	"variables": {
@@ -248,6 +264,317 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get Token",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "GetClientSecretFromKV",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "POST",
+							"headers": {
+								"Content-type": "application/x-www-form-urlencoded"
+							},
+							"url": "https://accounts.accesscontrol.windows.net/29e9c2e0-675c-4c89-9649-de2df9e8b789/tokens/OAuth/2",
+							"body": "grant_type=client_credentials&client_id=12ec4feb-986a-4a37-9f1d-872e4ce31565@29e9c2e0-675c-4c89-9649-de2df9e8b789&client_secret=activity('GetClientSecretFromKV').output.value/januxrxcom.sharepoint.com@29e9c2e0-675c-4c89-9649-de2df9e8b789"
+						}
+					},
+					{
+						"name": "GetClientSecretFromKV",
+						"type": "WebActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "GET",
+							"headers": {},
+							"url": "https://kv-kbc.vault.azure.net/secrets/secret-client/ba7cba0ffbf44a08bc9aa9ce8b5d3c47?api-version=7.3",
+							"authentication": {
+								"type": "MSI",
+								"resource": "https://vault.azure.net"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline2')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy data1",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "SnowflakeV2Sink",
+								"importSettings": {
+									"type": "SnowflakeImportCopyCommand"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "DelimitedText1",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "SnowflakeTable1",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DelimitedText1')]",
+				"[concat(variables('factoryId'), '/datasets/SnowflakeTable1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DelimitedText1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "AdventureWorks_Customers.csv",
+						"folderPath": "AdventureWorks_Customers",
+						"container": "bronze"
+					},
+					"columnDelimiter": ",",
+					"rowDelimiter": "\r\n",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "CustomerKey",
+						"type": "String"
+					},
+					{
+						"name": "Prefix",
+						"type": "String"
+					},
+					{
+						"name": "FirstName",
+						"type": "String"
+					},
+					{
+						"name": "LastName",
+						"type": "String"
+					},
+					{
+						"name": "BirthDate",
+						"type": "String"
+					},
+					{
+						"name": "MaritalStatus",
+						"type": "String"
+					},
+					{
+						"name": "Gender",
+						"type": "String"
+					},
+					{
+						"name": "EmailAddress",
+						"type": "String"
+					},
+					{
+						"name": "AnnualIncome",
+						"type": "String"
+					},
+					{
+						"name": "TotalChildren",
+						"type": "String"
+					},
+					{
+						"name": "EducationLevel",
+						"type": "String"
+					},
+					{
+						"name": "Occupation",
+						"type": "String"
+					},
+					{
+						"name": "HomeOwner",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SnowflakeTable1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Snowflake1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "SnowflakeV2Table",
+				"schema": [
+					{
+						"name": "CUSTOMERKEY",
+						"type": "NUMBER",
+						"precision": 38,
+						"scale": 0
+					},
+					{
+						"name": "PREFIX",
+						"type": "VARCHAR",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "FIRSTNAME",
+						"type": "VARCHAR",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "LASTNAME",
+						"type": "VARCHAR",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "BIRTHDATE",
+						"type": "DATE",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "MARITALSTATUS",
+						"type": "VARCHAR",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "GENDER",
+						"type": "VARCHAR",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "EMAILADDRESS",
+						"type": "VARCHAR",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "ANNUALINCOME",
+						"type": "NUMBER",
+						"precision": 12,
+						"scale": 2
+					},
+					{
+						"name": "TOTALCHILDREN",
+						"type": "NUMBER",
+						"precision": 38,
+						"scale": 0
+					},
+					{
+						"name": "EDUCATIONLEVEL",
+						"type": "VARCHAR",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "OCCUPATION",
+						"type": "VARCHAR",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "HOMEOWNER",
+						"type": "VARCHAR",
+						"precision": 0,
+						"scale": 0
+					}
+				],
+				"typeProperties": {
+					"schema": "BRONZE",
+					"table": "ADVENTUREWORKS_CUSTOMERS"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Snowflake1')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ds_bronze')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -261,10 +588,12 @@
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobFSLocation",
-						"fileName": "Customers.csv",
+						"fileName": "AdventureWorks_Customers.csv",
+						"folderPath": "AdventureWorks_Customers",
 						"fileSystem": "bronze"
 					},
 					"columnDelimiter": ",",
+					"rowDelimiter": "\n",
 					"escapeChar": "\\",
 					"firstRowAsHeader": true,
 					"quoteChar": "\""
@@ -418,6 +747,19 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/AzureBlobStorage1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"sasUri": "[parameters('AzureBlobStorage1_sasUri')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/AzureDataLakeStorage1')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -446,6 +788,30 @@
 					"enableServerCertificateValidation": true,
 					"authenticationType": "Anonymous"
 				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Snowflake1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "SnowflakeV2",
+				"typeProperties": {
+					"authenticationType": "Basic",
+					"accountIdentifier": "JH96153",
+					"user": "BRENESKEVIN44",
+					"database": "[parameters('Snowflake1_properties_typeProperties_database')]",
+					"warehouse": "DEMO_WH",
+					"host": "[parameters('Snowflake1_properties_typeProperties_host')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('Snowflake1_password')]"
+					},
+					"useUtcTimestamps": false
+				},
+				"version": "1.1"
 			},
 			"dependsOn": []
 		}

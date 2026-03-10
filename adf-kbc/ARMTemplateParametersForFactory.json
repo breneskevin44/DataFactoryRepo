@@ -8,11 +8,23 @@
 		"AzureDataLakeStorage1_accountKey": {
 			"value": ""
 		},
+		"Snowflake1_password": {
+			"value": ""
+		},
+		"AzureBlobStorage1_sasUri": {
+			"value": ""
+		},
 		"AzureDataLakeStorage1_properties_typeProperties_url": {
 			"value": "https://storageaccountkbc.dfs.core.windows.net/"
 		},
 		"HttpServer1_properties_typeProperties_url": {
 			"value": "https://raw.githubusercontent.com"
+		},
+		"Snowflake1_properties_typeProperties_database": {
+			"value": "CLINICAL_PIPELINE_DB"
+		},
+		"Snowflake1_properties_typeProperties_host": {
+			"value": "USSYPUC-JH96153.snowflakecomputing.com"
 		}
 	}
 }
