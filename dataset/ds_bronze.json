@@ -10,7 +10,8 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": "Customers.csv",
+				"fileName": "AdventureWorks_Customers.csv",
+				"folderPath": "AdventureWorks_Customers",
 				"fileSystem": "bronze"
 			},
 			"columnDelimiter": ",",
