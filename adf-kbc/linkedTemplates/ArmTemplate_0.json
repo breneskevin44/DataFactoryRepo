@@ -192,9 +192,10 @@
 						"container": "bronze"
 					},
 					"columnDelimiter": ",",
-					"rowDelimiter": "\r\n",
+					"rowDelimiter": "\r",
+					"encodingName": "WINDOWS-1252",
 					"escapeChar": "\\",
-					"firstRowAsHeader": true,
+					"firstRowAsHeader": false,
 					"quoteChar": "\""
 				},
 				"schema": [
