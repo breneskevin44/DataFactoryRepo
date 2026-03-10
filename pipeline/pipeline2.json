@@ -36,7 +36,7 @@
 				},
 				"inputs": [
 					{
-						"referenceName": "ds_sink_dynamic",
+						"referenceName": "DelimitedText1",
 						"type": "DatasetReference"
 					}
 				],
