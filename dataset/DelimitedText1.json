@@ -15,6 +15,7 @@
 				"container": "bronze"
 			},
 			"columnDelimiter": ",",
+			"rowDelimiter": "\r\n",
 			"encodingName": "WINDOWS-1252",
 			"escapeChar": "\\",
 			"firstRowAsHeader": true,
